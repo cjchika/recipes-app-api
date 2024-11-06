@@ -44,7 +44,7 @@ class PublicUserApiTest(TestCase):
             'password': 'testpass123',
             'name': 'Test name'
         }
-        create_user(payload)
+        create_user(**payload)
         res = self.client.post(CREATE_USER_URL, payload)
 
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
@@ -53,10 +53,10 @@ class PublicUserApiTest(TestCase):
         """Test an error is returned if password less than 5 chars."""
         payload = {
             'email': 'test@example.com',
-            'password': 'testpass123',
+            'password': 'pw',
             'name': 'Test name'
         }
-        create_user(payload)
+        # create_user(**payload)
         res = self.client.post(CREATE_USER_URL, payload)
 
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
