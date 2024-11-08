@@ -42,7 +42,8 @@ def create_recipe(user, **params):
 
 def create_user(**params):
     """Create and return a new user."""
-    return  get_user_model().objects.create_user(**params)
+    return get_user_model().objects.create_user(**params)
+
 
 class PublicRecipeAPITests(TestCase):
     """Test unauthorized API requests."""
@@ -62,7 +63,8 @@ class PrivateRecipeAPITests(TestCase):
 
     def setUp(self):
         self.client = APIClient()
-        self.user = create_user(email='user@example.com', password='testpass123')
+        self.user = create_user(email='user@example.com',
+                                password='testpass123')
         self.client.force_authenticate(self.user)
 
     def test_retrieve_recipes(self):
@@ -79,7 +81,8 @@ class PrivateRecipeAPITests(TestCase):
 
     def test_recipe_list_limited_to_user(self):
         """Test list of recipes is limited to authenticated user."""
-        other_user = create_user(email='user2@example.com', password='testpass123')
+        other_user = create_user(email='user2@example.com',
+                                 password='testpass123')
         create_recipe(user=other_user)
         create_recipe(user=self.user)
 
@@ -143,12 +146,13 @@ class PrivateRecipeAPITests(TestCase):
             description='Sample recipe description.'
         )
 
-        payload = {'title': 'New recipe title',
-                   'link': 'https://example.com/recipe.pdf',
-                   'description': 'New recipe description',
-                   'time_minutes': 10,
-                   'price': Decimal('2.50'),
-                }
+        payload = {
+            'title': 'New recipe title',
+            'link': 'https://example.com/recipe.pdf',
+            'description': 'New recipe description',
+            'time_minutes': 10,
+            'price': Decimal('2.50'),
+        }
         url = detail_url(recipe.id)
         res = self.client.put(url, payload)
 
@@ -160,7 +164,8 @@ class PrivateRecipeAPITests(TestCase):
 
     def test_update_user_returns_error(self):
         """Test changing the recipe user results in an error."""
-        new_user = create_user(email='user3@example.com', password='testpass001')
+        new_user = create_user(email='user3@example.com',
+                               password='testpass001')
         recipe = create_recipe(user=self.user)
 
         payload = {'user': new_user.id}
@@ -179,3 +184,15 @@ class PrivateRecipeAPITests(TestCase):
 
         self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Recipe.objects.filter(id=recipe.id).exists())
+
+    def test_delete_other_user_recipe_error(self):
+        """Test trying to delete another users recipe gives error."""
+        new_user = create_user(email='user3@example.com',
+                               password='testpass001')
+        recipe = create_recipe(user=new_user)
+
+        url = detail_url(recipe.id)
+        res = self.client.delete(url)
+
+        self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertTrue(Recipe.objects.filter(id=recipe.id).exists())
